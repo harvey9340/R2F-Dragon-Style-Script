@@ -3,50 +3,109 @@ Dragon Style Mod
 Made by harvey9340
 --]]
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
+local DragonText = "Dragon"
+local DragonColor = Color3.new(0.95, 0.05, 0.1)
+local DragonSequence = ColorSequence.new({ColorSequenceKeypoint.new(0, DragonColor), ColorSequenceKeypoint.new(1, DragonColor)})
+
+local plr = game.Players.LocalPlayer
+local pgui = plr.PlayerGui
+local interf = pgui.Interface
+local bt = interf.Battle
+local main = bt.Main
+local status = plr.Status
+
+local hasUpdatedOnce = false
+
+local function sendNotification(text, color)
+    color = color or Color3.new(1, 1, 1)
+    local notify = plr.PlayerGui:FindFirstChild("Notify")
+    if notify and notify:IsA("BindableEvent") then
+        notify:Fire(text)
+    end
+end
+
+local alreadyRunning = game.ReplicatedStorage:FindFirstChild("DragonMod_harvey9340")
+if alreadyRunning then
+    sendNotification("Dragon Style Mod by harvey9340 is already loaded")
+    return
+end
+
+alreadyRunning = Instance.new("BoolValue")
+alreadyRunning.Parent = game.ReplicatedStorage
+alreadyRunning.Value = true
+alreadyRunning.Name = "DragonMod_harvey9340"
+
+sendNotification("Dragon Style Mod by harvey9340 loading...")
 
 -- ============================================================
--- WATERMARK
+-- STYLE UPDATER (runs every frame)
 -- ============================================================
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DragonStyleMod"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = PlayerGui
+local function UpdateStyle()
+    if status.Style.Value == "Brawler" then
+        game.ReplicatedStorage.Styles.Brawler.VisualName.Value = DragonText
+        game.ReplicatedStorage.Styles.Brawler.Color.Value = DragonColor
+        main.XP.Fill.ImageColor3 = DragonColor
 
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 320, 0, 40)
-Frame.Position = UDim2.new(0, 10, 0, 10)
-Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Frame.BackgroundTransparency = 0.4
-Frame.BorderSizePixel = 0
-Frame.Parent = ScreenGui
+        local char = plr.Character
+        if char then
+            if char.HumanoidRootPart:FindFirstChild("Fire_Main") then
+                char.HumanoidRootPart.Fire_Main.Color = DragonSequence
+                char.HumanoidRootPart.Fire_Secondary.Color = DragonSequence
+                char.HumanoidRootPart.Lines1.Color = DragonSequence
+                char.HumanoidRootPart.Lines2.Color = DragonSequence
+                char.HumanoidRootPart.Sparks.Color = DragonSequence
+            end
+            if char.UpperTorso:FindFirstChild("r2f_aura_burst") then
+                char.UpperTorso["r2f_aura_burst"].Lines1.Color = DragonSequence
+                char.UpperTorso["r2f_aura_burst"].Lines2.Color = DragonSequence
+                char.UpperTorso["r2f_aura_burst"].Flare.Color = DragonSequence
+                char.UpperTorso["r2f_aura_burst"].Smoke.Color = DragonSequence
+                char.UpperTorso.Evading.Color = DragonSequence
+            end
+        end
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = Frame
+        -- Heat bar colors
+        if DragonText == "Dragon" then
+            main.Heat.Fill.ImageColor3 = Color3.fromRGB(180, 0, 0)
+            main.Heat.Fill2.ImageColor3 = Color3.fromRGB(255, 66, 142)
+            main.Heat.ClimaxFill.ImageColor3 = Color3.fromRGB(180, 0, 0)
+            main.Heat.ClimaxFill2.ImageColor3 = Color3.fromRGB(255, 39, 86)
+        end
+    end
 
-local Label = Instance.new("TextLabel")
-Label.Size = UDim2.new(1, 0, 1, 0)
-Label.BackgroundTransparency = 1
-Label.Text = "🐉 Dragon Style Mod made by harvey9340"
-Label.TextColor3 = Color3.fromRGB(255, 200, 50)
-Label.TextScaled = true
-Label.Font = Enum.Font.GothamBold
-Label.Parent = Frame
+    -- Menu watermark with YOUR name
+    local menu = pgui.MenuUI.Menu
+    menu.Bars.Mobile_Title.Text = "Dragon Style Mod by harvey9340"
+    menu.Bars.Mobile_Title.Visible = true
+end
 
 -- ============================================================
--- LOW HEALTH FLASH EFFECT
+-- ONE TIME SETUP
+-- ============================================================
+
+local function UpdateStyleOnce()
+    if not hasUpdatedOnce then
+        hasUpdatedOnce = true
+        sendNotification("Dragon Style Mod by harvey9340 loaded!", Color3.fromRGB(255, 200, 50))
+    end
+    DragonSequence = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, DragonColor),
+        ColorSequenceKeypoint.new(1, DragonColor)
+    })
+    local menu = pgui.MenuUI.Menu
+    menu.Bars.Mobile_Title.Text = "Dragon Style Mod by harvey9340"
+    menu.Bars.Mobile_Title.Visible = true
+end
+
+-- ============================================================
+-- LOW HEALTH FLASH
 -- ============================================================
 
 local LowHealthGui = Instance.new("ScreenGui")
 LowHealthGui.Name = "LowHealthEffect"
 LowHealthGui.ResetOnSpawn = false
-LowHealthGui.Parent = PlayerGui
+LowHealthGui.Parent = pgui
 
 local RedFlash = Instance.new("Frame")
 RedFlash.Size = UDim2.new(1, 0, 1, 0)
@@ -79,18 +138,18 @@ local function stopFlash()
     flashing = false
 end
 
-Humanoid.HealthChanged:Connect(function(health)
-    local maxHealth = Humanoid.MaxHealth
-    local percent = health / maxHealth
+status.Health.Changed:Connect(function()
+    local maxHealth = status.Health.MaxValue or 100
+    local percent = status.Health.Value / maxHealth
     if percent <= 0.3 then
-        startFlash()
+        task.spawn(startFlash)
     else
         stopFlash()
     end
 end)
 
 -- ============================================================
--- DOUBLE TAUNT = DRAGON AURA EFFECT
+-- DOUBLE TAUNT = DRAGON AURA
 -- ============================================================
 
 local tauntCount = 0
@@ -101,87 +160,111 @@ local function activateDragonAura()
     if auraActive then return end
     auraActive = true
 
-    -- Orange glow around character
-    local highlight = Instance.new("SelectionBox")
-    highlight.Color3 = Color3.fromRGB(255, 100, 0)
-    highlight.LineThickness = 0.05
-    highlight.SurfaceTransparency = 0.6
-    highlight.SurfaceColor3 = Color3.fromRGB(255, 60, 0)
-    highlight.Adornee = Character
-    highlight.Parent = Character
+    local char = plr.Character
+    if char then
+        local highlight = Instance.new("SelectionBox")
+        highlight.Color3 = Color3.fromRGB(255, 100, 0)
+        highlight.LineThickness = 0.05
+        highlight.SurfaceTransparency = 0.6
+        highlight.SurfaceColor3 = Color3.fromRGB(255, 60, 0)
+        highlight.Adornee = char
+        highlight.Parent = char
 
-    -- Notification
-    local AuraGui = Instance.new("ScreenGui")
-    AuraGui.ResetOnSpawn = false
-    AuraGui.Parent = PlayerGui
+        sendNotification("🔥 DRAGON AURA ACTIVATED", Color3.fromRGB(255, 100, 0))
 
-    local AuraLabel = Instance.new("TextLabel")
-    AuraLabel.Size = UDim2.new(0, 300, 0, 50)
-    AuraLabel.Position = UDim2.new(0.5, -150, 0.5, -25)
-    AuraLabel.BackgroundTransparency = 1
-    AuraLabel.Text = "🔥 DRAGON AURA ACTIVATED"
-    AuraLabel.TextColor3 = Color3.fromRGB(255, 100, 0)
-    AuraLabel.TextScaled = true
-    AuraLabel.Font = Enum.Font.GothamBold
-    AuraLabel.Parent = AuraGui
-
-    -- Fade out label after 2 seconds
-    task.delay(2, function()
-        for i = 0, 1, 0.05 do
-            AuraLabel.TextTransparency = i
-            task.wait(0.05)
-        end
-        AuraGui:Destroy()
-    end)
-
-    -- Remove aura after 5 seconds
-    task.delay(5, function()
-        highlight:Destroy()
-        auraActive = false
-    end)
-end
-
--- Listen for taunt via status
-local status = LocalPlayer:FindFirstChild("Status")
-if status then
-    local taunting = status:FindFirstChild("Taunting")
-    if taunting then
-        taunting.Changed:Connect(function()
-            if taunting.Value == true then
-                tauntCount = tauntCount + 1
-                if tauntTimer then
-                    task.cancel(tauntTimer)
-                end
-                if tauntCount >= 2 then
-                    tauntCount = 0
-                    activateDragonAura()
-                else
-                    tauntTimer = task.delay(3, function()
-                        tauntCount = 0
-                    end)
-                end
-            end
+        task.delay(5, function()
+            highlight:Destroy()
+            auraActive = false
         end)
     end
 end
 
--- ============================================================
--- RESPAWN HANDLER
--- ============================================================
-
-LocalPlayer.CharacterAdded:Connect(function(newChar)
-    Character = newChar
-    Humanoid = newChar:WaitForChild("Humanoid")
-    flashing = false
-
-    Humanoid.HealthChanged:Connect(function(health)
-        local percent = health / Humanoid.MaxHealth
-        if percent <= 0.3 then
-            startFlash()
-        else
-            stopFlash()
+status.Taunting.Changed:Connect(function()
+    if status.Taunting.Value == true then
+        tauntCount = tauntCount + 1
+        if tauntTimer then
+            task.cancel(tauntTimer)
         end
-    end)
+        if tauntCount >= 2 then
+            tauntCount = 0
+            activateDragonAura()
+        else
+            tauntTimer = task.delay(3, function()
+                tauntCount = 0
+            end)
+        end
+    end
 end)
 
-print("Dragon Style Mod loaded - made by harvey9340")
+-- ============================================================
+-- DEATH MESSAGE
+-- ============================================================
+
+status.Health.Changed:Connect(function()
+    if status.Health.Value <= 0 then
+        task.wait()
+        if not plr.Character:FindFirstChild("ImaDea") then return end
+        local prompts = {
+            "The Dragon falls... but never stays down.",
+            "Get up. Dragons don't stay on the ground.",
+            "That's the Dragon of Steel?",
+            "You can do better than that.",
+            "Rise again, Dragon.",
+        }
+        sendNotification(prompts[math.random(1, #prompts)], Color3.fromRGB(200, 0, 0))
+    end
+end)
+
+-- ============================================================
+-- STAT NOTIFICATIONS
+-- ============================================================
+
+status.Stats.Deaths.Changed:Connect(function()
+    sendNotification("deaths total: [" .. status.Stats.Deaths.Value .. "]", Color3.fromRGB(200, 0, 0))
+end)
+
+status.Level.Changed:Connect(function()
+    if status.Level.Value % 5 == 0 then
+        sendNotification("you are now level [" .. status.Level.Value .. "]", Color3.fromRGB(0, 200, 0))
+    end
+end)
+
+-- ============================================================
+-- SWITCH STYLE (press L)
+-- ============================================================
+
+game.UserInputService.InputBegan:Connect(function(key)
+    if game.UserInputService:GetFocusedTextBox() == nil then
+        if key.KeyCode == Enum.KeyCode.L then
+            if DragonText == "Dragon" then
+                DragonText = "Legend"
+                DragonColor = Color3.new(0.760784, 0.898039, 1)
+                sendNotification("legend style", DragonColor)
+            else
+                DragonText = "Dragon"
+                DragonColor = Color3.new(0.95, 0.05, 0.1)
+                sendNotification("dragon style", DragonColor)
+            end
+            UpdateStyleOnce()
+        end
+    end
+end)
+
+-- ============================================================
+-- RENDER LOOP
+-- ============================================================
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    UpdateStyle()
+end)
+
+coroutine.wrap(function()
+    while true do
+        UpdateStyleOnce()
+        task.wait(5)
+    end
+end)()
+
+sendNotification("Dragon Style Mod by harvey9340 loaded!", Color3.fromRGB(255, 200, 50))
+task.wait(3)
+sendNotification("press [L] to switch between Dragon and Legend styles", Color3.fromRGB(255, 255, 255))
