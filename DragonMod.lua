@@ -289,4 +289,19 @@ for i,z in pairs(abil.List.ListFrame:GetChildren()) do
             z.Generic.Label.Text = "Komaki Evade & Strike"
         end
     end
-end
+end-- Replace Brawler M1s with Legendary Dragon animations
+local moves = game.ReplicatedStorage.Moves
+
+-- Dragon style M1 combo animations
+moves["BAttack1"].Anim.AnimationId = "rbxassetid://12120045620"
+moves["BAttack2"].Anim.AnimationId = "rbxassetid://12120045620"
+moves["BAttack3"].Anim.AnimationId = "rbxassetid://12120045620"
+moves["BAttack4"].Anim.AnimationId = "rbxassetid://12120045620"
+
+-- Tiger Drop animation changed to Legendary Dragon style
+moves["TigerDrop"].Anim.AnimationId = "rbxassetid://12120052426"
+
+-- Finishing blow animations
+moves["BStrike1"].Anim.AnimationId = "rbxassetid://8216285224"
+moves["BStrike5"].Anim.AnimationId = "rbxassetid://7546691847"
+moves["BStomp"].Anim.AnimationId = "rbxasse
