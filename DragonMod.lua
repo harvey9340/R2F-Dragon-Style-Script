@@ -267,4 +267,26 @@ end)()
 
 sendNotification("Dragon Style Mod by harvey9340 loaded!", Color3.fromRGB(255, 200, 50))
 task.wait(3)
-sendNotification("press [L] to switch between Dragon and Legend styles", Color3.fromRGB(255, 255, 255))
+sendNotification("press [L] to switch between Dragon and Legend styles", Color3.fromRGB(255, 255, 255))-- Komaki Tiger Drop animation
+game.ReplicatedStorage.Moves.TigerDrop.Anim.AnimationId = "rbxassetid://12120052426"
+
+-- Rename Counter Hook to Komaki Tiger Drop in the menu
+local menu = pgui.MenuUI.Menu
+local abil = menu.Abilities.Frame.Frame.Frame
+for i,z in pairs(abil.List.ListFrame:GetChildren()) do
+    if z:IsA("ImageButton") then
+        if z.Name == "Counter Hook" then
+            z.Generic.Label.Text = "Komaki Tiger Drop (Lvl. 25)"
+        elseif z.Name == "Guru Parry" then
+            z.Generic.Label.Text = "Komaki Parry (Lvl. 20)"
+        elseif z.Name == "Guru Knockback" then
+            z.Generic.Label.Text = "Komaki Knock Back"
+        elseif z.Name == "Guru Spin Counter" then
+            z.Generic.Label.Text = "Komaki Fist Reversal"
+        elseif z.Name == "Guru Firearm Flip" then
+            z.Generic.Label.Text = "Komaki Shot Stopper"
+        elseif z.Name == "Guru Dodge Shot" then
+            z.Generic.Label.Text = "Komaki Evade & Strike"
+        end
+    end
+end
